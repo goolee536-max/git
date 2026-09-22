@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#07080b" />
+    <meta
+      name="description"
+      content="一款节奏利落、支持键盘和触屏操作的霓虹贪吃蛇游戏。"
+    />
+    <title>NEON SNAKE — 霓虹贪吃蛇</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307080b'/%3E%3Cpath d='M15 18h26v11H26v8h23v19H12V45h26v-8H15z' fill='%23c7ff1a'/%3E%3Ccircle cx='43' cy='23.5' r='2.5' fill='%2307080b'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./game.js" defer></script>
+  </head>
+  <body>
+    <div class="noise" aria-hidden="true"></div>
+    <main class="game-shell">
+      <header class="topbar">
+        <a class="brand" href="#game" aria-label="NEON SNAKE 游戏首页">
+          <span class="brand-mark" aria-hidden="true">S</span>
+          <span class="brand-copy">
+            <strong>NEON SNAKE</strong>
+            <small>街机模式 / 01</small>
+          </span>
+        </a>
+        <div class="status-line" aria-live="polite">
+          <span class="status-dot"></span>
+          <span id="statusText">等待开始</span>
+        </div>
+      </header>
+
+      <section class="game-layout" id="game">
+        <aside class="score-panel" aria-label="游戏数据">
+          <div class="eyebrow">CURRENT RUN</div>
+          <div class="score-block">
+            <span class="score-label">分数</span>
+            <strong class="score-value" id="score">000</strong>
+          </div>
+          <div class="metric-row">
+            <div>
+              <span>最高</span>
+              <strong id="bestScore">000</strong>
+            </div>
+            <div>
+              <span>速度</span>
+              <strong id="speedLevel">01</strong>
+            </div>
+            <div>
+              <span>障碍</span>
+              <strong id="wallCount">00</strong>
+            </div>
+          </div>
+          <div class="divider" aria-hidden="true"></div>
+          <div class="desktop-help">
+            <p class="help-title">控制方式</p>
+            <div class="key-row">
+              <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>
+              <span>移动</span>
+            </div>
+            <div class="key-row">
+              <kbd class="wide">SPACE</kbd>
+              <span>暂停</span>
+            </div>
+          </div>
+          <div class="run-actions">
+            <button class="text-button" id="pauseButton" type="button" disabled>暂停</button>
+            <button class="text-button" id="restartButton" type="button">重新开始</button>
+            <button class="text-button" id="historyButton" type="button">历史排行</button>
+          </div>
+        </aside>
+
+        <div class="play-column">
+          <div class="board-frame" id="boardFrame">
+            <div class="corner corner-tl" aria-hidden="true"></div>
+            <div class="corner corner-br" aria-hidden="true"></div>
+            <canvas
+              id="gameCanvas"
+              width="640"
+              height="640"
+              tabindex="-1"
+              aria-label="贪吃蛇游戏区域"
+              role="img"
+            ></canvas>
+
+            <div class="game-overlay" id="gameOverlay">
+              <div class="overlay-index">// 01</div>
+              <p class="overlay-kicker" id="overlayKicker">准备好了吗？</p>
+              <h1 id="overlayTitle">吃掉光点<br />躲开墙壁</h1>
+              <p class="overlay-copy" id="overlayCopy">每吃一个光点，墙壁都会重新排列</p>
+              <fieldset class="difficulty-picker" id="difficultyPicker">
+                <legend>选择难度</legend>
+                <label>
+                  <input type="radio" name="difficulty" value="relaxed" />
+                  <span>轻松</span>
+                </label>
+                <label>
+                  <input type="radio" name="difficulty" value="normal" checked />
+                  <span>标准</span>
+                </label>
+                <label>
+                  <input type="radio" name="difficulty" value="turbo" />
+                  <span>极速</span>
+                </label>
+              </fieldset>
+              <button class="primary-button" id="startButton" type="button">
+                <span id="startButtonText">开始游戏</span>
+                <span aria-hidden="true">↗</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="mobile-controls" aria-label="触屏方向控制">
+            <button class="dpad up" type="button" data-direction="up" aria-label="向上">↑</button>
+            <button class="dpad left" type="button" data-direction="left" aria-label="向左">←</button>
+            <button class="dpad center" type="button" id="mobilePause" aria-label="暂停或继续">Ⅱ</button>
+            <button class="dpad right" type="button" data-direction="right" aria-label="向右">→</button>
+            <button class="dpad down" type="button" data-direction="down" aria-label="向下">↓</button>
+          </div>
+          <button class="mobile-history-button" id="mobileHistoryButton" type="button">
+            查看历史排行榜
+          </button>
+        </div>
+      </section>
+
+      <dialog class="history-dialog" id="historyDialog" aria-labelledby="historyTitle">
+        <div class="dialog-head">
+          <div>
+            <p class="overlay-kicker">LOCAL RECORDS</p>
+            <h2 id="historyTitle">历史排行榜</h2>
+          </div>
+          <button class="dialog-close" id="closeHistoryButton" type="button" aria-label="关闭排行榜">×</button>
+        </div>
+        <div class="career-stats" aria-label="生涯统计">
+          <div><span>总局数</span><strong id="totalGames">0</strong></div>
+          <div><span>平均分</span><strong id="averageScore">000</strong></div>
+          <div><span>累计光点</span><strong id="totalFood">0</strong></div>
+        </div>
+        <div class="history-table-wrap">
+          <table class="history-table">
+            <thead>
+              <tr><th>排名</th><th>分数</th><th>难度</th><th>光点</th><th>用时</th><th>日期</th></tr>
+            </thead>
+            <tbody id="historyRows"></tbody>
+          </table>
+          <div class="history-empty" id="historyEmpty">
+            <strong>还没有比赛记录</strong>
+            <span>完成第一局后，成绩会出现在这里。</span>
+          </div>
+        </div>
+        <div class="dialog-foot">
+          <span>最多保存最近 50 局 · 按最高分排序</span>
+          <button class="clear-history-button" id="clearHistoryButton" type="button">清空记录</button>
+        </div>
+      </dialog>
+
+      <footer class="footer-note">
+        <span>吃得越多，速度越快</span>
+        <span class="footer-line" aria-hidden="true"></span>
+        <span>单局生存挑战</span>
+      </footer>
+    </main>
+  </body>
+</html>
